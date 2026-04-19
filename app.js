@@ -3,6 +3,10 @@
 // ============================================================
 const API_BASE = "https://music-sona-backend.vercel.app/api";
 
+// ✅ Your ImageKit credentials — get from imagekit.io dashboard
+const IMAGEKIT_PUBLIC_KEY = "public_yjk4r/uBhZDs80qyPem5dWEsZ1s=";       // replace this
+const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/slrdselkt"; // replace this
+
 // ============================================================
 //  STATE
 // ============================================================
@@ -65,7 +69,7 @@ document.querySelectorAll(".role-btn").forEach(btn => {
 });
 
 // ============================================================
-//  API HELPER — try/catch so buttons never freeze
+//  API HELPER
 // ============================================================
 async function api(method, endpoint, body = null, isForm = false) {
   try {
@@ -77,7 +81,6 @@ async function api(method, endpoint, body = null, isForm = false) {
     if (body) opts.body = isForm ? body : JSON.stringify(body);
 
     const res = await fetch(API_BASE + endpoint, opts);
-
     const contentType = res.headers.get("content-type");
     let data = {};
     if (contentType && contentType.includes("application/json")) {
@@ -86,15 +89,10 @@ async function api(method, endpoint, body = null, isForm = false) {
       const text = await res.text();
       data = { message: text || `Server error (${res.status})` };
     }
-
     return { ok: res.ok, status: res.status, data };
   } catch (err) {
     console.error("API Error:", endpoint, err.message);
-    return {
-      ok: false,
-      status: 0,
-      data: { message: "Cannot reach the server. Please try again." },
-    };
+    return { ok: false, status: 0, data: { message: "Cannot reach the server. Please try again." } };
   }
 }
 
@@ -111,12 +109,9 @@ registerForm.addEventListener("submit", async (e) => {
   const btn = registerForm.querySelector("button[type=submit]");
   btn.disabled = true; btn.textContent = "Creating...";
 
-  const { ok, data } = await api("POST", "/auth/register", {
-    username, email, password, role: selectedRole,
-  });
+  const { ok, data } = await api("POST", "/auth/register", { username, email, password, role: selectedRole });
 
   btn.disabled = false; btn.textContent = "Create Account";
-
   if (!ok) { regError.textContent = data.message || "Registration failed"; return; }
   currentUser = data.user;
   enterApp();
@@ -132,9 +127,7 @@ loginForm.addEventListener("submit", async (e) => {
   const password   = document.getElementById("login-password").value;
 
   const isEmail = identifier.includes("@");
-  const body = isEmail
-    ? { email: identifier, password }
-    : { username: identifier, password };
+  const body = isEmail ? { email: identifier, password } : { username: identifier, password };
 
   const btn = loginForm.querySelector("button[type=submit]");
   btn.disabled = true; btn.textContent = "Signing in...";
@@ -142,7 +135,6 @@ loginForm.addEventListener("submit", async (e) => {
   const { ok, data } = await api("POST", "/auth/login", body);
 
   btn.disabled = false; btn.textContent = "Sign In";
-
   if (!ok) { loginError.textContent = data.message || "Invalid credentials"; return; }
   currentUser = data.user;
   enterApp();
@@ -153,10 +145,7 @@ loginForm.addEventListener("submit", async (e) => {
 // ============================================================
 document.getElementById("logout-btn").addEventListener("click", async () => {
   await api("POST", "/auth/logout");
-  currentUser = null;
-  allMusics = [];
-  playlist = [];
-  currentIndex = -1;
+  currentUser = null; allMusics = []; playlist = []; currentIndex = -1;
   stopPlayer();
   appEl.classList.add("hidden");
   playerBar.classList.add("hidden");
@@ -179,17 +168,13 @@ function enterApp() {
 function updateSidebarUser() {
   document.getElementById("sidebar-username").textContent = currentUser.username;
   document.getElementById("sidebar-role").textContent = currentUser.role;
-  document.getElementById("user-avatar-letter").textContent =
-    currentUser.username[0].toUpperCase();
+  document.getElementById("user-avatar-letter").textContent = currentUser.username[0].toUpperCase();
 }
 
 function setupArtistUI() {
-  const artistOnly = document.querySelectorAll(".artist-only");
-  if (currentUser.role === "artist") {
-    artistOnly.forEach(el => el.classList.remove("hidden"));
-  } else {
-    artistOnly.forEach(el => el.classList.add("hidden"));
-  }
+  document.querySelectorAll(".artist-only").forEach(el => {
+    el.classList.toggle("hidden", currentUser.role !== "artist");
+  });
 }
 
 // ============================================================
@@ -202,38 +187,26 @@ function showView(viewId) {
   if (view) view.classList.add("active");
   const nav = document.querySelector(`.nav-item[data-view="${viewId}"]`);
   if (nav) nav.classList.add("active");
-
   if (viewId === "albums") loadAlbums();
   if (viewId === "create-album") loadTrackChecklist();
 }
 
 document.querySelectorAll(".nav-item").forEach(item => {
-  item.addEventListener("click", (e) => {
-    e.preventDefault();
-    showView(item.dataset.view);
-  });
+  item.addEventListener("click", (e) => { e.preventDefault(); showView(item.dataset.view); });
 });
 
-document.getElementById("back-to-albums").addEventListener("click", () => {
-  showView("albums");
-});
+document.getElementById("back-to-albums").addEventListener("click", () => showView("albums"));
 
 // ============================================================
 //  LOAD MUSICS
 // ============================================================
 async function loadMusics() {
   const grid = document.getElementById("music-grid");
-  grid.innerHTML = `
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-  `;
+  grid.innerHTML = `<div class="skeleton-loader"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div>`;
 
   const { ok, data } = await api("GET", "/music");
-
   grid.innerHTML = "";
+
   if (!ok) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${data.message}</p></div>`;
     return;
@@ -246,7 +219,6 @@ async function loadMusics() {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-music"></i><p>No tracks yet. Upload some music!</p></div>`;
     return;
   }
-
   allMusics.forEach((music, i) => grid.appendChild(createMusicCard(music, i)));
 }
 
@@ -272,15 +244,11 @@ function createMusicCard(music, index) {
 // ============================================================
 async function loadAlbums() {
   const grid = document.getElementById("albums-grid");
-  grid.innerHTML = `
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-  `;
+  grid.innerHTML = `<div class="skeleton-loader"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div>`;
 
   const { ok, data } = await api("GET", "/music/albums");
-
   grid.innerHTML = "";
+
   if (!ok) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${data.message}</p></div>`;
     return;
@@ -291,7 +259,6 @@ async function loadAlbums() {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-record-vinyl"></i><p>No albums yet</p></div>`;
     return;
   }
-
   albums.forEach(album => grid.appendChild(createAlbumCard(album)));
 }
 
@@ -299,7 +266,7 @@ function createAlbumCard(album) {
   const card = document.createElement("div");
   card.className = "album-card";
   const artistName = album.artist?.username || "Unknown";
-  const emojis = ["🎵", "🎶", "🎸", "🎹", "🥁", "🎷", "🎺", "🎻"];
+  const emojis = ["🎵","🎶","🎸","🎹","🥁","🎷","🎺","🎻"];
   const emoji = emojis[Math.abs(hashStr(album._id)) % emojis.length];
   card.innerHTML = `
     <div class="album-art">${emoji}</div>
@@ -325,7 +292,7 @@ async function openAlbum(albumId) {
   const album = data.album;
   const artistName = album.artist?.username || "Unknown";
   const tracks = album.musics || [];
-  const emojis = ["🎵", "🎶", "🎸", "🎹", "🥁", "🎷", "🎺", "🎻"];
+  const emojis = ["🎵","🎶","🎸","🎹","🥁","🎷","🎺","🎻"];
   const emoji = emojis[Math.abs(hashStr(album._id)) % emojis.length];
 
   content.innerHTML = `
@@ -342,10 +309,7 @@ async function openAlbum(albumId) {
   `;
 
   const trackList = document.getElementById("album-track-list");
-  if (!tracks.length) {
-    trackList.innerHTML = `<p class="muted">No tracks in this album.</p>`;
-    return;
-  }
+  if (!tracks.length) { trackList.innerHTML = `<p class="muted">No tracks in this album.</p>`; return; }
 
   const albumPlaylist = tracks.map(t => ({ ...t, artist: album.artist }));
   tracks.forEach((track, i) => {
@@ -362,7 +326,7 @@ async function openAlbum(albumId) {
 }
 
 // ============================================================
-//  UPLOAD TRACK
+//  UPLOAD — Direct to ImageKit from browser (bypasses Vercel limit)
 // ============================================================
 const fileDropZone = document.getElementById("file-drop-zone");
 const fileInput    = document.getElementById("upload-file");
@@ -372,9 +336,7 @@ fileDropZone.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => {
   if (fileInput.files[0]) fileLabel.textContent = fileInput.files[0].name;
 });
-fileDropZone.addEventListener("dragover", (e) => {
-  e.preventDefault(); fileDropZone.classList.add("drag-over");
-});
+fileDropZone.addEventListener("dragover", (e) => { e.preventDefault(); fileDropZone.classList.add("drag-over"); });
 fileDropZone.addEventListener("dragleave", () => fileDropZone.classList.remove("drag-over"));
 fileDropZone.addEventListener("drop", (e) => {
   e.preventDefault();
@@ -383,29 +345,73 @@ fileDropZone.addEventListener("drop", (e) => {
   if (file) { fileInput.files = e.dataTransfer.files; fileLabel.textContent = file.name; }
 });
 
+// Step 1: Get auth token from your backend
+async function getImageKitAuthParams() {
+  const { ok, data } = await api("GET", "/music/imagekit-auth");
+  if (!ok) throw new Error("Failed to get upload auth");
+  return data; // { token, expire, signature }
+}
+
+// Step 2: Upload directly to ImageKit
+async function uploadToImageKit(file) {
+  const auth = await getImageKitAuthParams();
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("fileName", "music_" + Date.now());
+  formData.append("publicKey", IMAGEKIT_PUBLIC_KEY);
+  formData.append("signature", auth.signature);
+  formData.append("expire", auth.expire);
+  formData.append("token", auth.token);
+  formData.append("folder", "sona/music");
+
+  const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "ImageKit upload failed");
+  }
+
+  const data = await res.json();
+  return data.url; // The final audio URL
+}
+
 document.getElementById("upload-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   uploadError.textContent = ""; uploadSuccess.textContent = "";
+
   const title = document.getElementById("upload-title").value.trim();
   const file  = fileInput.files[0];
   if (!file) { uploadError.textContent = "Please select an audio file."; return; }
-
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("music", file);
+  if (!title) { uploadError.textContent = "Please enter a track title."; return; }
 
   const btn = document.getElementById("upload-btn");
-  btn.disabled = true; btn.textContent = "Uploading...";
+  btn.disabled = true; btn.textContent = "Uploading to ImageKit...";
 
-  const { ok, data } = await api("POST", "/music/upload", formData, true);
+  try {
+    // Upload file directly to ImageKit from browser
+    const audioUrl = await uploadToImageKit(file);
 
-  btn.disabled = false; btn.textContent = "Upload Track";
+    btn.textContent = "Saving track...";
 
-  if (!ok) { uploadError.textContent = data.message || "Upload failed"; return; }
-  uploadSuccess.textContent = "Track uploaded successfully! 🎉";
-  document.getElementById("upload-form").reset();
-  fileLabel.textContent = "Drop your audio file here or click to browse";
-  loadMusics();
+    // Save just the URL + title to your backend
+    const { ok, data } = await api("POST", "/music/save-track", { title, uri: audioUrl });
+
+    if (!ok) { uploadError.textContent = data.message || "Failed to save track"; return; }
+
+    uploadSuccess.textContent = "Track uploaded successfully! 🎉";
+    document.getElementById("upload-form").reset();
+    fileLabel.textContent = "Drop your audio file here or click to browse";
+    loadMusics();
+
+  } catch (err) {
+    uploadError.textContent = err.message || "Upload failed";
+  } finally {
+    btn.disabled = false; btn.textContent = "Upload Track";
+  }
 });
 
 // ============================================================
@@ -414,25 +420,17 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
 async function loadTrackChecklist() {
   const list = document.getElementById("track-checklist");
   list.innerHTML = `<p class="muted">Loading tracks...</p>`;
-
-  // Always fetch fresh list
   const { ok, data } = await api("GET", "/music");
   if (ok) allMusics = data.musics || [];
-
-  // Show ALL tracks (artist picks from them)
   list.innerHTML = "";
   if (!allMusics.length) {
     list.innerHTML = `<p class="muted">Upload some tracks first to create an album.</p>`;
     return;
   }
-
   allMusics.forEach(track => {
     const item = document.createElement("label");
     item.className = "track-check-item";
-    item.innerHTML = `
-      <input type="checkbox" value="${track._id}" />
-      <span>${escHtml(track.title)}</span>
-    `;
+    item.innerHTML = `<input type="checkbox" value="${track._id}" /><span>${escHtml(track.title)}</span>`;
     list.appendChild(item);
   });
 }
@@ -451,11 +449,9 @@ document.getElementById("album-form").addEventListener("submit", async (e) => {
   const { ok, data } = await api("POST", "/music/album", { title, musics: checked });
 
   btn.disabled = false; btn.textContent = "Create Album";
-
   if (!ok) { albumError.textContent = data.message || "Failed to create album"; return; }
   albumSuccess.textContent = "Album created! 🎉";
   document.getElementById("album-form").reset();
-  // Uncheck all boxes
   document.querySelectorAll("#track-checklist input").forEach(i => i.checked = false);
 });
 
@@ -464,17 +460,13 @@ document.getElementById("album-form").addEventListener("submit", async (e) => {
 // ============================================================
 function playTrack(index, tracks) {
   if (!tracks || !tracks.length) return;
-  currentIndex = index;
-  playlist = tracks;
-
+  currentIndex = index; playlist = tracks;
   const track = tracks[index];
   if (!track || !track.uri) return;
-
   audioEl.src = track.uri;
   audioEl.volume = parseFloat(document.getElementById("volume-slider").value);
-  audioEl.play().catch(err => console.warn("Playback error:", err));
+  audioEl.play().catch(err => console.warn("Playback:", err));
   isPlaying = true;
-
   updatePlayerUI(track);
   playerBar.classList.remove("hidden");
   updatePlayingCard();
@@ -496,9 +488,7 @@ function updatePlayingCard() {
 }
 
 function stopPlayer() {
-  audioEl.pause();
-  audioEl.src = "";
-  isPlaying = false;
+  audioEl.pause(); audioEl.src = ""; isPlaying = false;
   document.getElementById("play-pause-btn").innerHTML = `<i class="fa-solid fa-play"></i>`;
 }
 
@@ -517,16 +507,13 @@ document.getElementById("prev-btn").addEventListener("click", () => {
   if (!playlist.length) return;
   playTrack((currentIndex - 1 + playlist.length) % playlist.length, playlist);
 });
-
 document.getElementById("next-btn").addEventListener("click", () => {
   if (!playlist.length) return;
   playTrack((currentIndex + 1) % playlist.length, playlist);
 });
-
 audioEl.addEventListener("ended", () => {
   playTrack((currentIndex + 1) % playlist.length, playlist);
 });
-
 audioEl.addEventListener("timeupdate", () => {
   if (!audioEl.duration) return;
   const pct = (audioEl.currentTime / audioEl.duration) * 100;
@@ -534,12 +521,10 @@ audioEl.addEventListener("timeupdate", () => {
   document.getElementById("time-current").textContent = fmtTime(audioEl.currentTime);
   document.getElementById("time-total").textContent   = fmtTime(audioEl.duration);
 });
-
 document.getElementById("progress-bar").addEventListener("input", (e) => {
   if (!audioEl.duration) return;
   audioEl.currentTime = (e.target.value / 100) * audioEl.duration;
 });
-
 document.getElementById("volume-slider").addEventListener("input", (e) => {
   audioEl.volume = e.target.value;
 });
@@ -553,22 +538,13 @@ function fmtTime(s) {
   const sec = Math.floor(s % 60).toString().padStart(2, "0");
   return `${m}:${sec}`;
 }
-
 function escHtml(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  return String(str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-
 function hashStr(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
   return h;
 }
 
-// ============================================================
-//  INIT
-// ============================================================
 setGreeting();
