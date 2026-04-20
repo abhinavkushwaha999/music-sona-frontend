@@ -1,20 +1,87 @@
 // ============================================================
-//  SONA — Frontend App
+//  NovaBeats — Frontend App
 // ============================================================
 const API_BASE = "https://music-sona-backend.vercel.app/api";
 
-// ✅ Your ImageKit credentials — get from imagekit.io dashboard
-const IMAGEKIT_PUBLIC_KEY = "public_yjk4r/uBhZDs80qyPem5dWEsZ1s=";       // replace this
-const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/slrdselkt"; // replace this
+const IMAGEKIT_PUBLIC_KEY   = "public_yjk4r/uBhZDs80qyPem5dWEsZ1s=";
+const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/slrdselkt";
+
+// ============================================================
+//  PARTICLE BACKGROUND ANIMATION
+// ============================================================
+(function initParticles() {
+  const canvas = document.getElementById("particles-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const COLORS = ["124,106,245", "240,101,200", "64,224,208", "255,215,0"];
+
+  function createParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 2 + 0.5,
+      dx: (Math.random() - 0.5) * 0.4,
+      dy: (Math.random() - 0.5) * 0.4,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      alpha: Math.random() * 0.5 + 0.1,
+      pulse: Math.random() * Math.PI * 2,
+    };
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(createParticle());
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.pulse += 0.02;
+      const alpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${alpha})`;
+      ctx.fill();
+      p.x += p.dx; p.y += p.dy;
+      if (p.x < 0 || p.x > W) p.dx *= -1;
+      if (p.y < 0 || p.y > H) p.dy *= -1;
+    });
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(124,106,245,${0.08 * (1 - dist / 100)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
 
 // ============================================================
 //  STATE
 // ============================================================
-let currentUser = null;
-let allMusics = [];
-let playlist = [];
+let currentUser  = null;
+let allMusics    = [];
+let playlist     = [];
 let currentIndex = -1;
-let isPlaying = false;
+let isPlaying    = false;
 let selectedRole = "user";
 
 // ============================================================
@@ -53,7 +120,7 @@ document.querySelectorAll(".auth-tab").forEach(tab => {
     tab.classList.add("active");
     document.getElementById(`${tab.dataset.tab}-form`).classList.add("active");
     loginError.textContent = "";
-    regError.textContent = "";
+    regError.textContent   = "";
   });
 });
 
@@ -79,7 +146,6 @@ async function api(method, endpoint, body = null, isForm = false) {
       headers: isForm ? {} : { "Content-Type": "application/json" },
     };
     if (body) opts.body = isForm ? body : JSON.stringify(body);
-
     const res = await fetch(API_BASE + endpoint, opts);
     const contentType = res.headers.get("content-type");
     let data = {};
@@ -105,13 +171,12 @@ registerForm.addEventListener("submit", async (e) => {
   const username = document.getElementById("reg-username").value.trim();
   const email    = document.getElementById("reg-email").value.trim();
   const password = document.getElementById("reg-password").value;
-
   const btn = registerForm.querySelector("button[type=submit]");
-  btn.disabled = true; btn.textContent = "Creating...";
-
+  btn.disabled = true;
+  btn.querySelector("span").textContent = "Creating...";
   const { ok, data } = await api("POST", "/auth/register", { username, email, password, role: selectedRole });
-
-  btn.disabled = false; btn.textContent = "Create Account";
+  btn.disabled = false;
+  btn.querySelector("span").textContent = "Create Account";
   if (!ok) { regError.textContent = data.message || "Registration failed"; return; }
   currentUser = data.user;
   enterApp();
@@ -125,16 +190,14 @@ loginForm.addEventListener("submit", async (e) => {
   loginError.textContent = "";
   const identifier = document.getElementById("login-identifier").value.trim();
   const password   = document.getElementById("login-password").value;
-
-  const isEmail = identifier.includes("@");
-  const body = isEmail ? { email: identifier, password } : { username: identifier, password };
-
+  const isEmail    = identifier.includes("@");
+  const body       = isEmail ? { email: identifier, password } : { username: identifier, password };
   const btn = loginForm.querySelector("button[type=submit]");
-  btn.disabled = true; btn.textContent = "Signing in...";
-
+  btn.disabled = true;
+  btn.querySelector("span").textContent = "Signing in...";
   const { ok, data } = await api("POST", "/auth/login", body);
-
-  btn.disabled = false; btn.textContent = "Sign In";
+  btn.disabled = false;
+  btn.querySelector("span").textContent = "Sign In";
   if (!ok) { loginError.textContent = data.message || "Invalid credentials"; return; }
   currentUser = data.user;
   enterApp();
@@ -167,7 +230,7 @@ function enterApp() {
 
 function updateSidebarUser() {
   document.getElementById("sidebar-username").textContent = currentUser.username;
-  document.getElementById("sidebar-role").textContent = currentUser.role;
+  document.getElementById("sidebar-role").textContent     = currentUser.role;
   document.getElementById("user-avatar-letter").textContent = currentUser.username[0].toUpperCase();
 }
 
@@ -187,14 +250,13 @@ function showView(viewId) {
   if (view) view.classList.add("active");
   const nav = document.querySelector(`.nav-item[data-view="${viewId}"]`);
   if (nav) nav.classList.add("active");
-  if (viewId === "albums") loadAlbums();
+  if (viewId === "albums")       loadAlbums();
   if (viewId === "create-album") loadTrackChecklist();
 }
 
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", (e) => { e.preventDefault(); showView(item.dataset.view); });
 });
-
 document.getElementById("back-to-albums").addEventListener("click", () => showView("albums"));
 
 // ============================================================
@@ -202,24 +264,27 @@ document.getElementById("back-to-albums").addEventListener("click", () => showVi
 // ============================================================
 async function loadMusics() {
   const grid = document.getElementById("music-grid");
-  grid.innerHTML = `<div class="skeleton-loader"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div>`;
-
+  grid.innerHTML = `
+    <div class="skeleton-loader"></div><div class="skeleton-loader"></div>
+    <div class="skeleton-loader"></div><div class="skeleton-loader"></div>
+  `;
   const { ok, data } = await api("GET", "/music");
   grid.innerHTML = "";
-
   if (!ok) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${data.message}</p></div>`;
     return;
   }
-
   allMusics = data.musics || [];
-  playlist = [...allMusics];
-
+  playlist  = [...allMusics];
   if (!allMusics.length) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-music"></i><p>No tracks yet. Upload some music!</p></div>`;
     return;
   }
-  allMusics.forEach((music, i) => grid.appendChild(createMusicCard(music, i)));
+  allMusics.forEach((music, i) => {
+    const card = createMusicCard(music, i);
+    card.style.animationDelay = `${i * 0.05}s`;
+    grid.appendChild(card);
+  });
 }
 
 function createMusicCard(music, index) {
@@ -227,10 +292,15 @@ function createMusicCard(music, index) {
   card.className = "music-card";
   card.dataset.id = music._id;
   const artistName = music.artist?.username || "Unknown Artist";
+  const emojis = ["🎵","🎶","🎸","🎹","🥁","🎷","🎺","🎻","🎼","🎤"];
+  const emoji = emojis[Math.abs(hashStr(music._id)) % emojis.length];
   card.innerHTML = `
     <div class="music-thumb">
-      <i class="fa-solid fa-music"></i>
-      <div class="play-overlay"><i class="fa-solid fa-play"></i></div>
+      <div class="music-thumb-bg"></div>
+      <span style="font-size:2.5rem;position:relative;z-index:1">${emoji}</span>
+      <div class="play-overlay">
+        <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+      </div>
     </div>
     <div class="music-card-title">${escHtml(music.title)}</div>
     <div class="music-card-artist">${escHtml(artistName)}</div>
@@ -245,21 +315,22 @@ function createMusicCard(music, index) {
 async function loadAlbums() {
   const grid = document.getElementById("albums-grid");
   grid.innerHTML = `<div class="skeleton-loader"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div>`;
-
   const { ok, data } = await api("GET", "/music/albums");
   grid.innerHTML = "";
-
   if (!ok) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${data.message}</p></div>`;
     return;
   }
-
   const albums = data.albums || [];
   if (!albums.length) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-record-vinyl"></i><p>No albums yet</p></div>`;
     return;
   }
-  albums.forEach(album => grid.appendChild(createAlbumCard(album)));
+  albums.forEach((album, i) => {
+    const card = createAlbumCard(album);
+    card.style.animationDelay = `${i * 0.06}s`;
+    grid.appendChild(card);
+  });
 }
 
 function createAlbumCard(album) {
@@ -284,17 +355,14 @@ async function openAlbum(albumId) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-album-detail").classList.add("active");
   const content = document.getElementById("album-detail-content");
-  content.innerHTML = `<div class="skeleton-loader" style="height:180px;max-width:520px"></div>`;
-
+  content.innerHTML = `<div class="skeleton-loader" style="height:190px;max-width:540px"></div>`;
   const { ok, data } = await api("GET", `/music/albums/${albumId}`);
   if (!ok) { content.innerHTML = `<p class="muted">Failed to load album.</p>`; return; }
-
-  const album = data.album;
+  const album      = data.album;
   const artistName = album.artist?.username || "Unknown";
-  const tracks = album.musics || [];
-  const emojis = ["🎵","🎶","🎸","🎹","🥁","🎷","🎺","🎻"];
-  const emoji = emojis[Math.abs(hashStr(album._id)) % emojis.length];
-
+  const tracks     = album.musics || [];
+  const emojis     = ["🎵","🎶","🎸","🎹","🥁","🎷","🎺","🎻"];
+  const emoji      = emojis[Math.abs(hashStr(album._id)) % emojis.length];
   content.innerHTML = `
     <div class="album-detail-hero">
       <div class="album-detail-art">${emoji}</div>
@@ -304,13 +372,14 @@ async function openAlbum(albumId) {
         <p>${escHtml(artistName)} • ${tracks.length} track${tracks.length !== 1 ? "s" : ""}</p>
       </div>
     </div>
-    <div class="section-label">Tracks</div>
+    <div class="section-header">
+      <div class="section-label">Tracks</div>
+      <div class="section-line"></div>
+    </div>
     <div class="track-list" id="album-track-list"></div>
   `;
-
   const trackList = document.getElementById("album-track-list");
   if (!tracks.length) { trackList.innerHTML = `<p class="muted">No tracks in this album.</p>`; return; }
-
   const albumPlaylist = tracks.map(t => ({ ...t, artist: album.artist }));
   tracks.forEach((track, i) => {
     const item = document.createElement("div");
@@ -326,7 +395,7 @@ async function openAlbum(albumId) {
 }
 
 // ============================================================
-//  UPLOAD — Direct to ImageKit from browser (bypasses Vercel limit)
+//  UPLOAD — Direct to ImageKit
 // ============================================================
 const fileDropZone = document.getElementById("file-drop-zone");
 const fileInput    = document.getElementById("upload-file");
@@ -345,17 +414,14 @@ fileDropZone.addEventListener("drop", (e) => {
   if (file) { fileInput.files = e.dataTransfer.files; fileLabel.textContent = file.name; }
 });
 
-// Step 1: Get auth token from your backend
 async function getImageKitAuthParams() {
   const { ok, data } = await api("GET", "/music/imagekit-auth");
   if (!ok) throw new Error("Failed to get upload auth");
-  return data; // { token, expire, signature }
+  return data;
 }
 
-// Step 2: Upload directly to ImageKit
 async function uploadToImageKit(file) {
   const auth = await getImageKitAuthParams();
-
   const formData = new FormData();
   formData.append("file", file);
   formData.append("fileName", "music_" + Date.now());
@@ -363,54 +429,37 @@ async function uploadToImageKit(file) {
   formData.append("signature", auth.signature);
   formData.append("expire", auth.expire);
   formData.append("token", auth.token);
-  formData.append("folder", "sona/music");
-
-  const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || "ImageKit upload failed");
-  }
-
+  formData.append("folder", "novabeats/music");
+  const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", { method: "POST", body: formData });
+  if (!res.ok) { const err = await res.json(); throw new Error(err.message || "ImageKit upload failed"); }
   const data = await res.json();
-  return data.url; // The final audio URL
+  return data.url;
 }
 
 document.getElementById("upload-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   uploadError.textContent = ""; uploadSuccess.textContent = "";
-
   const title = document.getElementById("upload-title").value.trim();
   const file  = fileInput.files[0];
-  if (!file) { uploadError.textContent = "Please select an audio file."; return; }
+  if (!file)  { uploadError.textContent = "Please select an audio file."; return; }
   if (!title) { uploadError.textContent = "Please enter a track title."; return; }
-
   const btn = document.getElementById("upload-btn");
-  btn.disabled = true; btn.textContent = "Uploading to ImageKit...";
-
+  btn.disabled = true;
+  btn.querySelector("span").textContent = "Uploading...";
   try {
-    // Upload file directly to ImageKit from browser
     const audioUrl = await uploadToImageKit(file);
-
-    btn.textContent = "Saving track...";
-
-    // Save just the URL + title to your backend
+    btn.querySelector("span").textContent = "Saving...";
     const { ok, data } = await api("POST", "/music/save-track", { title, uri: audioUrl });
-
     if (!ok) { uploadError.textContent = data.message || "Failed to save track"; return; }
-
     uploadSuccess.textContent = "Track uploaded successfully! 🎉";
     document.getElementById("upload-form").reset();
     fileLabel.textContent = "Drop your audio file here or click to browse";
     loadMusics();
-
   } catch (err) {
     uploadError.textContent = err.message || "Upload failed";
   } finally {
-    btn.disabled = false; btn.textContent = "Upload Track";
+    btn.disabled = false;
+    btn.querySelector("span").textContent = "Upload Track";
   }
 });
 
@@ -442,13 +491,12 @@ document.getElementById("album-form").addEventListener("submit", async (e) => {
   const checked = [...document.querySelectorAll("#track-checklist input:checked")].map(i => i.value);
   if (!title)          { albumError.textContent = "Album title is required"; return; }
   if (!checked.length) { albumError.textContent = "Select at least one track"; return; }
-
   const btn = e.submitter;
-  btn.disabled = true; btn.textContent = "Creating...";
-
+  btn.disabled = true;
+  btn.querySelector("span").textContent = "Creating...";
   const { ok, data } = await api("POST", "/music/album", { title, musics: checked });
-
-  btn.disabled = false; btn.textContent = "Create Album";
+  btn.disabled = false;
+  btn.querySelector("span").textContent = "Create Album";
   if (!ok) { albumError.textContent = data.message || "Failed to create album"; return; }
   albumSuccess.textContent = "Album created! 🎉";
   document.getElementById("album-form").reset();
@@ -470,6 +518,11 @@ function playTrack(index, tracks) {
   updatePlayerUI(track);
   playerBar.classList.remove("hidden");
   updatePlayingCard();
+  // Update sidebar mini player
+  const mini = document.getElementById("now-playing-mini");
+  const npmTitle = document.getElementById("npm-title");
+  if (mini) mini.classList.remove("hidden");
+  if (npmTitle) npmTitle.textContent = track.title;
 }
 
 function updatePlayerUI(track) {
@@ -490,6 +543,8 @@ function updatePlayingCard() {
 function stopPlayer() {
   audioEl.pause(); audioEl.src = ""; isPlaying = false;
   document.getElementById("play-pause-btn").innerHTML = `<i class="fa-solid fa-play"></i>`;
+  const mini = document.getElementById("now-playing-mini");
+  if (mini) mini.classList.add("hidden");
 }
 
 document.getElementById("play-pause-btn").addEventListener("click", () => {
@@ -520,6 +575,8 @@ audioEl.addEventListener("timeupdate", () => {
   document.getElementById("progress-bar").value = pct;
   document.getElementById("time-current").textContent = fmtTime(audioEl.currentTime);
   document.getElementById("time-total").textContent   = fmtTime(audioEl.duration);
+  const fill = document.getElementById("progress-fill");
+  if (fill) fill.style.width = pct + "%";
 });
 document.getElementById("progress-bar").addEventListener("input", (e) => {
   if (!audioEl.duration) return;
@@ -539,7 +596,9 @@ function fmtTime(s) {
   return `${m}:${sec}`;
 }
 function escHtml(str) {
-  return String(str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 function hashStr(str) {
   let h = 0;
@@ -547,4 +606,7 @@ function hashStr(str) {
   return h;
 }
 
+// ============================================================
+//  INIT
+// ============================================================
 setGreeting();
