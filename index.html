@@ -17,24 +17,29 @@
   <div class="bg-grid"></div>
 </div>
 
+<!-- 3D FLOATING SHAPES -->
+<div class="shapes-3d" aria-hidden="true">
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+</div>
+
 <!-- AUTH OVERLAY -->
 <div id="auth-overlay" class="auth-overlay active">
   <div class="auth-box">
     <div class="auth-logo">
-      <div class="logo-mark">
-        <span class="logo-n">N</span>
-      </div>
+      <div class="logo-mark"><span class="logo-n">N</span></div>
       <div class="logo-text">
         <span class="logo-nova">Nova</span><span class="logo-beats">Beats</span>
       </div>
     </div>
     <p class="auth-tagline">Music without limits</p>
-
     <div class="auth-tabs">
       <button class="auth-tab active" data-tab="login">Sign In</button>
       <button class="auth-tab" data-tab="register">Register</button>
     </div>
-
     <!-- LOGIN -->
     <form id="login-form" class="auth-form active">
       <div class="form-group">
@@ -52,12 +57,8 @@
         </div>
       </div>
       <div id="login-error" class="auth-error"></div>
-      <button type="submit" class="btn-primary">
-        <span>Sign In</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
+      <button type="submit" class="btn-primary"><span>Sign In</span><i class="fa-solid fa-arrow-right"></i></button>
     </form>
-
     <!-- REGISTER -->
     <form id="register-form" class="auth-form">
       <div class="form-group">
@@ -84,21 +85,20 @@
       <div class="form-group">
         <label>I am a...</label>
         <div class="role-toggle">
-          <button type="button" class="role-btn active" data-role="user">
-            <i class="fa-solid fa-headphones"></i> Listener
-          </button>
-          <button type="button" class="role-btn" data-role="artist">
-            <i class="fa-solid fa-microphone"></i> Artist
-          </button>
+          <button type="button" class="role-btn active" data-role="user"><i class="fa-solid fa-headphones"></i> Listener</button>
+          <button type="button" class="role-btn" data-role="artist"><i class="fa-solid fa-microphone"></i> Artist</button>
         </div>
       </div>
       <div id="reg-error" class="auth-error"></div>
-      <button type="submit" class="btn-primary">
-        <span>Create Account</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
+      <button type="submit" class="btn-primary"><span>Create Account</span><i class="fa-solid fa-arrow-right"></i></button>
     </form>
   </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="toast hidden">
+  <i class="toast-icon fa-solid fa-circle-check"></i>
+  <span id="toast-msg">Done!</span>
 </div>
 
 <!-- MAIN APP -->
@@ -110,37 +110,36 @@
       <div class="logo-mark-sm">N</div>
       <span class="sidebar-brand"><span class="logo-nova">Nova</span><span class="logo-beats">Beats</span></span>
     </div>
-
     <nav class="sidebar-nav">
       <div class="nav-section-label">Menu</div>
       <a href="#" class="nav-item active" data-view="home">
-        <div class="nav-icon"><i class="fa-solid fa-house"></i></div>
-        <span>Home</span>
+        <div class="nav-icon"><i class="fa-solid fa-house"></i></div><span>Home</span>
+      </a>
+      <a href="#" class="nav-item" data-view="search">
+        <div class="nav-icon"><i class="fa-solid fa-magnifying-glass"></i></div><span>Search</span>
       </a>
       <a href="#" class="nav-item" data-view="albums">
-        <div class="nav-icon"><i class="fa-solid fa-record-vinyl"></i></div>
-        <span>Albums</span>
+        <div class="nav-icon"><i class="fa-solid fa-record-vinyl"></i></div><span>Albums</span>
+      </a>
+      <a href="#" class="nav-item" data-view="liked">
+        <div class="nav-icon"><i class="fa-solid fa-heart"></i></div><span>Liked Songs</span>
+        <span class="nav-badge" id="liked-count">0</span>
       </a>
 
       <div class="nav-section-label artist-only hidden">Artist</div>
       <a href="#" class="nav-item artist-only hidden" data-view="upload">
-        <div class="nav-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-        <span>Upload</span>
+        <div class="nav-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div><span>Upload</span>
       </a>
       <a href="#" class="nav-item artist-only hidden" data-view="create-album">
-        <div class="nav-icon"><i class="fa-solid fa-layer-group"></i></div>
-        <span>New Album</span>
+        <div class="nav-icon"><i class="fa-solid fa-layer-group"></i></div><span>New Album</span>
       </a>
     </nav>
-
     <div class="sidebar-bottom">
       <div class="now-playing-mini hidden" id="now-playing-mini">
         <div class="npm-icon"><i class="fa-solid fa-music"></i></div>
         <div class="npm-info">
           <span class="npm-title" id="npm-title">—</span>
-          <span class="npm-bars">
-            <span></span><span></span><span></span><span></span>
-          </span>
+          <span class="npm-bars"><span></span><span></span><span></span><span></span></span>
         </div>
       </div>
       <div class="user-pill" id="user-pill">
@@ -149,9 +148,7 @@
           <span class="user-name" id="sidebar-username">User</span>
           <span class="user-role" id="sidebar-role">listener</span>
         </div>
-        <button class="logout-btn" id="logout-btn" title="Logout">
-          <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
+        <button class="logout-btn" id="logout-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
   </aside>
@@ -168,9 +165,35 @@
         </div>
         <p class="view-sub">Discover your next favorite track</p>
       </div>
+      <!-- FEATURED BANNER -->
+      <div class="featured-banner" id="featured-banner">
+        <div class="featured-bg"></div>
+        <div class="featured-content">
+          <div class="featured-tag">🔥 Trending Now</div>
+          <h2 class="featured-title" id="featured-title">Loading...</h2>
+          <p class="featured-artist" id="featured-artist">—</p>
+          <button class="featured-play-btn" id="featured-play-btn">
+            <i class="fa-solid fa-play"></i> Play Now
+          </button>
+        </div>
+        <div class="featured-visual">
+          <div class="vinyl-3d" id="featured-vinyl">
+            <div class="vinyl-disc">
+              <div class="vinyl-label">NB</div>
+              <div class="vinyl-grooves"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="section-header">
         <div class="section-label">All Tracks</div>
         <div class="section-line"></div>
+        <!-- FILTER CHIPS -->
+        <div class="filter-chips" id="filter-chips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="recent">Recent</button>
+        </div>
       </div>
       <div id="music-grid" class="music-grid">
         <div class="skeleton-loader"></div>
@@ -178,6 +201,52 @@
         <div class="skeleton-loader"></div>
         <div class="skeleton-loader"></div>
         <div class="skeleton-loader"></div>
+      </div>
+    </section>
+
+    <!-- SEARCH VIEW -->
+    <section id="view-search" class="view">
+      <div class="view-header">
+        <h1>Search</h1>
+        <p class="view-sub">Find tracks, albums and artists</p>
+      </div>
+      <div class="search-bar-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="search-input" class="search-input" placeholder="Search for tracks, albums, artists..."/>
+        <button class="search-clear hidden" id="search-clear"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <!-- FILTER TABS -->
+      <div class="search-filter-tabs">
+        <button class="s-tab active" data-type="all">All</button>
+        <button class="s-tab" data-type="tracks">Tracks</button>
+        <button class="s-tab" data-type="albums">Albums</button>
+        <button class="s-tab" data-type="artists">Artists</button>
+      </div>
+      <div id="search-results" class="search-results">
+        <div class="search-empty">
+          <div class="search-empty-icon">🎵</div>
+          <p>Start typing to search</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIKED SONGS VIEW -->
+    <section id="view-liked" class="view">
+      <div class="view-header liked-header">
+        <div class="liked-hero">
+          <div class="liked-icon-wrap"><i class="fa-solid fa-heart"></i></div>
+          <div>
+            <p class="view-sub">Your Collection</p>
+            <h1>Liked Songs</h1>
+            <p class="liked-count-text" id="liked-count-text">0 songs</p>
+          </div>
+        </div>
+      </div>
+      <div id="liked-list" class="liked-list">
+        <div class="empty-state">
+          <i class="fa-regular fa-heart"></i>
+          <p>Songs you like will appear here</p>
+        </div>
       </div>
     </section>
 
@@ -201,19 +270,14 @@
     <!-- ALBUM DETAIL VIEW -->
     <section id="view-album-detail" class="view">
       <div class="back-btn-wrap">
-        <button class="back-btn" id="back-to-albums">
-          <i class="fa-solid fa-arrow-left"></i> Back to Albums
-        </button>
+        <button class="back-btn" id="back-to-albums"><i class="fa-solid fa-arrow-left"></i> Back to Albums</button>
       </div>
       <div id="album-detail-content"></div>
     </section>
 
     <!-- UPLOAD VIEW -->
     <section id="view-upload" class="view">
-      <div class="view-header">
-        <h1>Upload Track</h1>
-        <p class="view-sub">Share your music with the world</p>
-      </div>
+      <div class="view-header"><h1>Upload Track</h1><p class="view-sub">Share your music with the world</p></div>
       <form id="upload-form" class="styled-form">
         <div class="form-group">
           <label>Track Title</label>
@@ -225,9 +289,7 @@
         <div class="form-group">
           <label>Audio File</label>
           <div class="file-drop-zone" id="file-drop-zone">
-            <div class="file-drop-icon">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-            </div>
+            <div class="file-drop-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
             <span id="file-label">Drop your audio file here or click to browse</span>
             <span class="file-hint">MP3, WAV, FLAC supported</span>
             <input type="file" id="upload-file" accept="audio/*" hidden required/>
@@ -236,18 +298,14 @@
         <div id="upload-error" class="auth-error"></div>
         <div id="upload-success" class="auth-success"></div>
         <button type="submit" class="btn-primary" id="upload-btn">
-          <span>Upload Track</span>
-          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Track</span><i class="fa-solid fa-cloud-arrow-up"></i>
         </button>
       </form>
     </section>
 
     <!-- CREATE ALBUM VIEW -->
     <section id="view-create-album" class="view">
-      <div class="view-header">
-        <h1>Create Album</h1>
-        <p class="view-sub">Curate your tracks into an album</p>
-      </div>
+      <div class="view-header"><h1>Create Album</h1><p class="view-sub">Curate your tracks into an album</p></div>
       <form id="album-form" class="styled-form">
         <div class="form-group">
           <label>Album Title</label>
@@ -258,20 +316,44 @@
         </div>
         <div class="form-group">
           <label>Select Tracks</label>
-          <div id="track-checklist" class="track-checklist">
-            <p class="muted">Loading your tracks...</p>
-          </div>
+          <div id="track-checklist" class="track-checklist"><p class="muted">Loading your tracks...</p></div>
         </div>
         <div id="album-error" class="auth-error"></div>
         <div id="album-success" class="auth-success"></div>
         <button type="submit" class="btn-primary">
-          <span>Create Album</span>
-          <i class="fa-solid fa-layer-group"></i>
+          <span>Create Album</span><i class="fa-solid fa-layer-group"></i>
         </button>
       </form>
     </section>
 
   </main>
+</div>
+
+<!-- SHARE MODAL -->
+<div id="share-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Share Track</h3>
+      <button class="modal-close" id="share-modal-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="share-track-info">
+        <div class="share-thumb"><i class="fa-solid fa-music"></i></div>
+        <div>
+          <div class="share-title" id="share-title">Track Name</div>
+          <div class="share-artist" id="share-artist">Artist</div>
+        </div>
+      </div>
+      <div class="share-link-wrap">
+        <input type="text" id="share-link-input" class="share-link-input" readonly/>
+        <button class="copy-btn" id="copy-link-btn"><i class="fa-solid fa-copy"></i> Copy</button>
+      </div>
+      <div class="share-socials">
+        <button class="social-btn whatsapp" id="share-whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+        <button class="social-btn twitter" id="share-twitter"><i class="fa-brands fa-x-twitter"></i> Twitter</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PLAYER BAR -->
@@ -285,19 +367,18 @@
       <div class="player-title" id="player-title">—</div>
       <div class="player-artist" id="player-artist">—</div>
     </div>
+    <!-- LIKE BUTTON IN PLAYER -->
+    <button class="player-like-btn" id="player-like-btn" title="Like this song">
+      <i class="fa-regular fa-heart"></i>
+    </button>
   </div>
-
   <div class="player-center">
     <div class="player-controls">
-      <button class="ctrl-btn" id="prev-btn" title="Previous">
-        <i class="fa-solid fa-backward-step"></i>
-      </button>
-      <button class="ctrl-btn play-pause-btn" id="play-pause-btn">
-        <i class="fa-solid fa-play"></i>
-      </button>
-      <button class="ctrl-btn" id="next-btn" title="Next">
-        <i class="fa-solid fa-forward-step"></i>
-      </button>
+      <button class="ctrl-btn shuffle-btn" id="shuffle-btn" title="Shuffle"><i class="fa-solid fa-shuffle"></i></button>
+      <button class="ctrl-btn" id="prev-btn" title="Previous"><i class="fa-solid fa-backward-step"></i></button>
+      <button class="ctrl-btn play-pause-btn" id="play-pause-btn"><i class="fa-solid fa-play"></i></button>
+      <button class="ctrl-btn" id="next-btn" title="Next"><i class="fa-solid fa-forward-step"></i></button>
+      <button class="ctrl-btn repeat-btn" id="repeat-btn" title="Repeat"><i class="fa-solid fa-repeat"></i></button>
     </div>
     <div class="progress-wrap">
       <span class="time-label" id="time-current">0:00</span>
@@ -308,8 +389,8 @@
       <span class="time-label" id="time-total">0:00</span>
     </div>
   </div>
-
   <div class="player-right">
+    <button class="ctrl-btn share-player-btn" id="share-player-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
     <i class="fa-solid fa-volume-high vol-icon"></i>
     <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.8"/>
   </div>
